@@ -33,32 +33,38 @@ func TestGitHubTokenIsNotSet(t *testing.T) {
 }
 
 func TestGitHubEnterpriseClient(t *testing.T) {
-	url := "https://github.company.com/api/v3/"
-	up, err := NewUpdater(Config{APIToken: "hogehoge", EnterpriseBaseURL: url})
+	baseURL := "https://github.company.com/"
+	up, err := NewUpdater(Config{APIToken: "hogehoge", EnterpriseBaseURL: baseURL})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if up.api.BaseURL.String() != url {
-		t.Error("Base URL was set to", up.api.BaseURL, ", want", url)
-	}
-	if up.api.UploadURL.String() != url {
-		t.Error("Upload URL was set to", up.api.UploadURL, ", want", url)
+
+	wantBaseURL := baseURL + "api/v3/"
+
+	if up.api.BaseURL.String() != wantBaseURL {
+		t.Error("Base URL was set to", up.api.BaseURL, ", want", wantBaseURL)
 	}
 
-	url2 := "https://upload.github.company.com/api/v3/"
+	if want := baseURL + "api/uploads/"; up.api.UploadURL.String() != want {
+		t.Error("Upload URL was set to", up.api.UploadURL, ", want", want)
+	}
+
+	uploadURL := "https://upload.github.company.com/api/uploads/"
 	up, err = NewUpdater(Config{
 		APIToken:            "hogehoge",
-		EnterpriseBaseURL:   url,
-		EnterpriseUploadURL: url2,
+		EnterpriseBaseURL:   baseURL,
+		EnterpriseUploadURL: uploadURL,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if up.api.BaseURL.String() != url {
-		t.Error("Base URL was set to", up.api.BaseURL, ", want", url)
+
+	if up.api.BaseURL.String() != wantBaseURL {
+		t.Error("Base URL was set to", up.api.BaseURL, ", want", wantBaseURL)
 	}
-	if up.api.UploadURL.String() != url2 {
-		t.Error("Upload URL was set to", up.api.UploadURL, ", want", url2)
+
+	if up.api.UploadURL.String() != uploadURL {
+		t.Error("Upload URL was set to", up.api.UploadURL, ", want", uploadURL)
 	}
 }
 

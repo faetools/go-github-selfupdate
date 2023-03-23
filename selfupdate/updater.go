@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/google/go-github/v50/github"
 	gitconfig "github.com/tcnksm/go-gitconfig"
@@ -76,7 +77,7 @@ func NewUpdater(config Config) (*Updater, error) {
 
 	u := config.EnterpriseUploadURL
 	if u == "" {
-		u = config.EnterpriseBaseURL
+		u = strings.TrimSuffix(config.EnterpriseBaseURL, "/api/v3")
 	}
 	client, err := github.NewEnterpriseClient(config.EnterpriseBaseURL, u, hc)
 	if err != nil {
