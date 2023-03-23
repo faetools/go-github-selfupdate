@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/blang/semver"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
@@ -11,11 +12,11 @@ import (
 
 const version = "1.2.3"
 
-func selfUpdate(slug string) error {
+func selfUpdate(owner, name string) error {
 	selfupdate.EnableLog()
 
 	previous := semver.MustParse(version)
-	latest, err := selfupdate.UpdateSelf(previous, slug)
+	latest, err := selfupdate.UpdateSelf(previous, owner, name)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func main() {
 	}
 
 	if *update {
-		if err := selfUpdate(*slug); err != nil {
+		if err := selfUpdate(filepath.Split(*slug)); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

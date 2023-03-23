@@ -137,19 +137,14 @@ func findReleaseAndAsset(rels []*github.RepositoryRelease,
 // where 'foo' is a command name. '-' can also be used as a separator. File can be compressed with zip, gzip, zxip, tar&zip or tar&zxip.
 // So the asset can have a file extension for the corresponding compression format such as '.zip'.
 // On Windows, '.exe' also can be contained such as 'foo_windows_amd64.exe.zip'.
-func (up *Updater) DetectLatest(slug string) (release *Release, found bool, err error) {
-	return up.DetectVersion(slug, "")
+func (up *Updater) DetectLatest(owner, name string) (release *Release, found bool, err error) {
+	return up.DetectVersion(owner, name, "")
 }
 
 // DetectVersion tries to get the given version of the repository on Github. `slug` means `owner/name` formatted string.
 // And version indicates the required version.
-func (up *Updater) DetectVersion(slug, version string) (release *Release, found bool, err error) {
-	repo := strings.Split(slug, "/")
-	if len(repo) != 2 || repo[0] == "" || repo[1] == "" {
-		return nil, false, fmt.Errorf("Invalid slug format. It should be 'owner/name': %s", slug)
-	}
-
-	rels, res, err := up.api.Repositories.ListReleases(up.apiCtx, repo[0], repo[1], nil)
+func (up *Updater) DetectVersion(owner, name, version string) (release *Release, found bool, err error) {
+	rels, res, err := up.api.Repositories.ListReleases(up.apiCtx, owner, name, nil)
 	if err != nil {
 		log.Println("API returned an error response:", err)
 		if res != nil && res.StatusCode == 404 {
@@ -179,8 +174,8 @@ func (up *Updater) DetectVersion(slug, version string) (release *Release, found 
 		rel.GetBody(),
 		rel.GetName(),
 		&publishedAt,
-		repo[0],
-		repo[1],
+		owner,
+		name,
 	}
 
 	if up.validator != nil {
@@ -197,11 +192,11 @@ func (up *Updater) DetectVersion(slug, version string) (release *Release, found 
 
 // DetectLatest detects the latest release of the slug (owner/repo).
 // This function is a shortcut version of updater.DetectLatest() method.
-func DetectLatest(slug string) (*Release, bool, error) {
-	return DefaultUpdater().DetectLatest(slug)
+func DetectLatest(owner, name string) (*Release, bool, error) {
+	return DefaultUpdater().DetectLatest(owner, name)
 }
 
 // DetectVersion detects the given release of the slug (owner/repo) from its version.
-func DetectVersion(slug, version string) (*Release, bool, error) {
-	return DefaultUpdater().DetectVersion(slug, version)
+func DetectVersion(owner, name, version string) (*Release, bool, error) {
+	return DefaultUpdater().DetectVersion(owner, name, version)
 }

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -45,7 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	latest, found, err := selfupdate.DetectLatest(repo)
+	latest, found, err := selfupdate.DetectLatest(filepath.Split(repo))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

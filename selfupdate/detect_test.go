@@ -3,6 +3,7 @@ package selfupdate
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestDetectReleaseWithVersionPrefix(t *testing.T) {
-	r, ok, err := DetectLatest("rhysd/github-clone-all")
+	r, ok, err := DetectLatest("rhysd", "github-clone-all")
 	if err != nil {
 		t.Fatal("Fetch failed:", err)
 	}
@@ -56,7 +57,7 @@ func TestDetectReleaseWithVersionPrefix(t *testing.T) {
 
 func TestDetectVersionExisting(t *testing.T) {
 	testVersion := "v2.2.0"
-	r, ok, err := DetectVersion("rhysd/github-clone-all", testVersion)
+	r, ok, err := DetectVersion("rhysd", "github-clone-all", testVersion)
 	if err != nil {
 		t.Fatal("Fetch failed:", err)
 	}
@@ -69,7 +70,7 @@ func TestDetectVersionExisting(t *testing.T) {
 }
 
 func TestDetectVersionNotExisting(t *testing.T) {
-	r, ok, err := DetectVersion("rhysd/github-clone-all", "foobar")
+	r, ok, err := DetectVersion("rhysd", "github-clone-all", "foobar")
 	if err != nil {
 		t.Fatal("Fetch failed:", err)
 	}
@@ -83,22 +84,23 @@ func TestDetectVersionNotExisting(t *testing.T) {
 
 func TestDetectReleasesForVariousArchives(t *testing.T) {
 	for _, tc := range []struct {
-		slug   string
+		owner  string
+		name   string
 		prefix string
 	}{
-		{"rhysd-test/test-release-zip", "v"},
-		{"rhysd-test/test-release-tar", "v"},
-		{"rhysd-test/test-release-gzip", "v"},
-		{"rhysd-test/test-release-xz", "release-v"},
-		{"rhysd-test/test-release-tar-xz", "release-"},
+		{"rhysd-test", "test-release-zip", "v"},
+		{"rhysd-test", "test-release-tar", "v"},
+		{"rhysd-test", "test-release-gzip", "v"},
+		{"rhysd-test", "test-release-xz", "release-v"},
+		{"rhysd-test", "test-release-tar-xz", "release-"},
 	} {
-		t.Run(tc.slug, func(t *testing.T) {
-			r, ok, err := DetectLatest(tc.slug)
+		t.Run(tc.name, func(t *testing.T) {
+			r, ok, err := DetectLatest("rhysd-test", tc.name)
 			if err != nil {
 				t.Fatal("Fetch failed:", err)
 			}
 			if !ok {
-				t.Fatal(tc.slug, "not found")
+				t.Fatal(tc.name, "not found")
 			}
 			if r == nil {
 				t.Fatal("Release not detected")
@@ -106,14 +108,17 @@ func TestDetectReleasesForVariousArchives(t *testing.T) {
 			if !r.Version.Equals(semver.MustParse("1.2.3")) {
 				t.Error("")
 			}
-			url := fmt.Sprintf("https://github.com/%s/releases/tag/%s1.2.3", tc.slug, tc.prefix)
+			url := fmt.Sprintf("https://github.com/%s/%s/releases/tag/%s1.2.3",
+				tc.owner, tc.name, tc.prefix)
 			if r.URL != url {
 				t.Error("URL is not correct. Want", url, "but got", r.URL)
 			}
 			if r.ReleaseNotes == "" {
 				t.Error("Release note is unexpectedly empty")
 			}
-			if !strings.HasPrefix(r.AssetURL, fmt.Sprintf("https://github.com/%s/releases/download/%s1.2.3/", tc.slug, tc.prefix)) {
+			if !strings.HasPrefix(r.AssetURL,
+				fmt.Sprintf("https://github.com/%s/%s/releases/download/%s1.2.3/",
+					tc.owner, tc.name, tc.prefix)) {
 				t.Error("Unexpected asset URL:", r.AssetURL)
 			}
 			if r.Name == "" {
@@ -139,7 +144,7 @@ func TestDetectReleasesForVariousArchives(t *testing.T) {
 }
 
 func TestDetectReleaseButNoAsset(t *testing.T) {
-	_, ok, err := DetectLatest("rhysd/clever-f.vim")
+	_, ok, err := DetectLatest("rhysd", "clever-f.vim")
 	if err != nil {
 		t.Fatal("Fetch failed:", err)
 	}
@@ -149,7 +154,7 @@ func TestDetectReleaseButNoAsset(t *testing.T) {
 }
 
 func TestDetectNoRelease(t *testing.T) {
-	_, ok, err := DetectLatest("rhysd/clever-f.vim")
+	_, ok, err := DetectLatest("rhysd", "clever-f.vim")
 	if err != nil {
 		t.Fatal("Fetch failed:", err)
 	}
@@ -158,28 +163,8 @@ func TestDetectNoRelease(t *testing.T) {
 	}
 }
 
-func TestInvalidSlug(t *testing.T) {
-	up := DefaultUpdater()
-
-	for _, slug := range []string{
-		"foo",
-		"/",
-		"foo/",
-		"/bar",
-		"foo/bar/piyo",
-	} {
-		_, _, err := up.DetectLatest(slug)
-		if err == nil {
-			t.Error(slug, "should be invalid slug")
-		}
-		if !strings.Contains(err.Error(), "Invalid slug format") {
-			t.Error("Unexpected error for", slug, ":", err)
-		}
-	}
-}
-
 func TestNonExistingRepo(t *testing.T) {
-	v, ok, err := DetectLatest("rhysd/non-existing-repo")
+	v, ok, err := DetectLatest("rhysd", "non-existing-repo")
 	if err != nil {
 		t.Fatal("Non-existing repo should not cause an error:", v)
 	}
@@ -189,7 +174,7 @@ func TestNonExistingRepo(t *testing.T) {
 }
 
 func TestNoReleaseFound(t *testing.T) {
-	_, ok, err := DetectLatest("rhysd/misc")
+	_, ok, err := DetectLatest("rhysd", "misc")
 	if err != nil {
 		t.Fatal("Repo having no release should not cause an error:", err)
 	}
@@ -203,7 +188,7 @@ func TestDetectFromBrokenGitHubEnterpriseURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, ok, _ := up.DetectLatest("foo/bar")
+	_, ok, _ := up.DetectLatest("foo", "bar")
 	if ok {
 		t.Fatal("Invalid GitHub Enterprise base URL should raise an error")
 	}
@@ -228,7 +213,7 @@ func TestDetectFromGitHubEnterpriseRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, ok, err := up.DetectLatest(repo)
+	r, ok, err := up.DetectLatest(filepath.Split(repo))
 	if err != nil {
 		t.Fatal("Fetch failed:", err)
 	}

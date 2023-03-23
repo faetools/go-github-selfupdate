@@ -106,8 +106,7 @@ func (up *Updater) UpdateTo(rel *Release, cmdPath string) error {
 }
 
 // UpdateCommand updates a given command binary to the latest version.
-// 'slug' represents 'owner/name' repository on GitHub and 'current' means the current version.
-func (up *Updater) UpdateCommand(cmdPath string, current semver.Version, slug string) (*Release, error) {
+func (up *Updater) UpdateCommand(cmdPath string, current semver.Version, owner, name string) (*Release, error) {
 	if runtime.GOOS == "windows" && !strings.HasSuffix(cmdPath, ".exe") {
 		// Ensure to add '.exe' to given path on Windows
 		cmdPath = cmdPath + ".exe"
@@ -125,7 +124,7 @@ func (up *Updater) UpdateCommand(cmdPath string, current semver.Version, slug st
 		cmdPath = p
 	}
 
-	rel, ok, err := up.DetectLatest(slug)
+	rel, ok, err := up.DetectLatest(owner, name)
 	if err != nil {
 		return nil, err
 	}
@@ -146,12 +145,12 @@ func (up *Updater) UpdateCommand(cmdPath string, current semver.Version, slug st
 
 // UpdateSelf updates the running executable itself to the latest version.
 // 'slug' represents 'owner/name' repository on GitHub and 'current' means the current version.
-func (up *Updater) UpdateSelf(current semver.Version, slug string) (*Release, error) {
+func (up *Updater) UpdateSelf(current semver.Version, owner, name string) (*Release, error) {
 	cmdPath, err := os.Executable()
 	if err != nil {
 		return nil, err
 	}
-	return up.UpdateCommand(cmdPath, current, slug)
+	return up.UpdateCommand(cmdPath, current, owner, name)
 }
 
 // UpdateTo downloads an executable from assetURL and replace the current binary with the downloaded one.
@@ -170,12 +169,12 @@ func UpdateTo(assetURL, cmdPath string) error {
 
 // UpdateCommand updates a given command binary to the latest version.
 // This function is a shortcut version of updater.UpdateCommand.
-func UpdateCommand(cmdPath string, current semver.Version, slug string) (*Release, error) {
-	return DefaultUpdater().UpdateCommand(cmdPath, current, slug)
+func UpdateCommand(cmdPath string, current semver.Version, owner, name string) (*Release, error) {
+	return DefaultUpdater().UpdateCommand(cmdPath, current, owner, name)
 }
 
 // UpdateSelf updates the running executable itself to the latest version.
 // This function is a shortcut version of updater.UpdateSelf.
-func UpdateSelf(current semver.Version, slug string) (*Release, error) {
-	return DefaultUpdater().UpdateSelf(current, slug)
+func UpdateSelf(current semver.Version, owner, name string) (*Release, error) {
+	return DefaultUpdater().UpdateSelf(current, owner, name)
 }

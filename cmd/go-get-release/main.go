@@ -100,13 +100,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	latest, found, err := selfupdate.DetectLatest(slug)
+	owner, name := filepath.Split(slug)
+
+	latest, found, err := selfupdate.DetectLatest(owner, name)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error while detecting the latest version:", err)
 		os.Exit(1)
 	}
 	if !found {
-		fmt.Fprintln(os.Stderr, "No release was found in", slug)
+		fmt.Fprintln(os.Stderr, "No release was found in", owner, name)
 		os.Exit(1)
 	}
 
