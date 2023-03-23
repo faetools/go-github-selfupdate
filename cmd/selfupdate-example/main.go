@@ -30,7 +30,7 @@ func selfUpdate(slug string) error {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "Usage: selfupdate-example [flags]\n")
+	fmt.Fprintln(os.Stderr, "Usage: selfupdate-example [flags]")
 	flag.PrintDefaults()
 }
 

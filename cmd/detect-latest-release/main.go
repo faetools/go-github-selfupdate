@@ -11,7 +11,7 @@ import (
 )
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "Usage: detect-latest-release [flags] {repo}\n\n  {repo} must be URL to GitHub repository or in 'owner/name' format.\n\nFlags:\n")
+	fmt.Fprintf(os.Stderr, "Usage: detect-latest-release [flags] {repo}\n\n  {repo} must be URL to GitHub repository or in 'owner/name' format.\n\nFlags:\n\n")
 	flag.PrintDefaults()
 }
 
