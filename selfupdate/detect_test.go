@@ -453,5 +453,4 @@ func TestFindReleaseAndAsset(t *testing.T) {
 			t.Errorf("expected not to find an asset for this fixture: %q, but got: %v", fixture.name, asset)
 		}
 	}
-
 }

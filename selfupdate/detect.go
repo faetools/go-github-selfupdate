@@ -13,8 +13,8 @@ import (
 var reVersion = regexp.MustCompile(`\d+\.\d+\.\d+`)
 
 func findAssetFromRelease(rel *github.RepositoryRelease,
-	suffixes []string, targetVersion string, filters []*regexp.Regexp) (*github.ReleaseAsset, semver.Version, bool) {
-
+	suffixes []string, targetVersion string, filters []*regexp.Regexp,
+) (*github.ReleaseAsset, semver.Version, bool) {
 	if targetVersion != "" && targetVersion != rel.GetTagName() {
 		log.Println("Skip", rel.GetTagName(), "not matching to specified version", targetVersion)
 		return nil, semver.Version{}, false
@@ -89,7 +89,8 @@ func findValidationAsset(rel *github.RepositoryRelease, validationName string) (
 
 func findReleaseAndAsset(rels []*github.RepositoryRelease,
 	targetVersion string,
-	filters []*regexp.Regexp) (*github.RepositoryRelease, *github.ReleaseAsset, semver.Version, bool) {
+	filters []*regexp.Regexp,
+) (*github.RepositoryRelease, *github.ReleaseAsset, semver.Version, bool) {
 	// Generate candidates
 	suffixes := make([]string, 0, 2*7*2)
 	for _, sep := range []rune{'_', '-'} {
@@ -142,7 +143,7 @@ func (up *Updater) DetectLatest(slug string) (release *Release, found bool, err 
 
 // DetectVersion tries to get the given version of the repository on Github. `slug` means `owner/name` formatted string.
 // And version indicates the required version.
-func (up *Updater) DetectVersion(slug string, version string) (release *Release, found bool, err error) {
+func (up *Updater) DetectVersion(slug, version string) (release *Release, found bool, err error) {
 	repo := strings.Split(slug, "/")
 	if len(repo) != 2 || repo[0] == "" || repo[1] == "" {
 		return nil, false, fmt.Errorf("Invalid slug format. It should be 'owner/name': %s", slug)
@@ -201,6 +202,6 @@ func DetectLatest(slug string) (*Release, bool, error) {
 }
 
 // DetectVersion detects the given release of the slug (owner/repo) from its version.
-func DetectVersion(slug string, version string) (*Release, bool, error) {
+func DetectVersion(slug, version string) (*Release, bool, error) {
 	return DefaultUpdater().DetectVersion(slug, version)
 }

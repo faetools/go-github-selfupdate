@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"go/build"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/rhysd/go-github-selfupdate/selfupdate"
 )
 
 var version = "1.0.0"
@@ -66,7 +67,7 @@ func installFrom(url, cmd, path string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to uncompress downloaded asset from %s: %s", url, err)
 	}
-	bin, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0755)
+	bin, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0o755)
 	if err != nil {
 		return err
 	}

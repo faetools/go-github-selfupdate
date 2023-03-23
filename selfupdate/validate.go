@@ -20,8 +20,7 @@ type Validator interface {
 
 // SHA2Validator specifies a SHA256 validator for additional file validation
 // before updating.
-type SHA2Validator struct {
-}
+type SHA2Validator struct{}
 
 // Validate validates the SHA256 sum of the release against the contents of an
 // additional asset file.

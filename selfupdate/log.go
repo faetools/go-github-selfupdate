@@ -6,8 +6,10 @@ import (
 	"os"
 )
 
-var log = stdlog.New(ioutil.Discard, "", 0)
-var logEnabled = false
+var (
+	log        = stdlog.New(ioutil.Discard, "", 0)
+	logEnabled = false
+)
 
 // EnableLog enables to output logging messages in library
 func EnableLog() {
