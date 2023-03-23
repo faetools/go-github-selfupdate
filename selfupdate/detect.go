@@ -110,7 +110,8 @@ func findReleaseAndAsset(rels []*github.RepositoryRelease,
 	for _, rel := range rels {
 		a, v, err := findAssetFromRelease(rel, suffixes, targetVersion, filters)
 		if err != nil {
-			return nil, nil, ver, fmt.Errorf("could not find asset from release %q with suffixes (%q): %w", rel.GetTagName(), suffixes, err)
+			return nil, nil, ver, fmt.Errorf("could not find asset from release %q for %s %s: %w",
+				rel.GetTagName(), runtime.GOOS, runtime.GOARCH, err)
 		}
 
 		// Note: any version with suffix is less than any version without suffix.
