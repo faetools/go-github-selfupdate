@@ -4,89 +4,17 @@ import (
 	"fmt"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/blang/semver"
 	"github.com/google/go-github/v50/github"
+	"github.com/samber/lo"
 )
 
-var reVersion = regexp.MustCompile(`\d+\.\d+\.\d+`)
-
-func findAssetFromRelease(rel *github.RepositoryRelease,
-	suffixes []string, targetVersion string, filters []*regexp.Regexp,
-) (*github.ReleaseAsset, semver.Version, error) {
-	if targetVersion != "" && targetVersion != rel.GetTagName() {
-		return nil, semver.Version{}, fmt.Errorf("%q does not match the target version (%s)", targetVersion, targetVersion)
-	}
-
-	if targetVersion == "" && rel.GetDraft() {
-		return nil, semver.Version{}, fmt.Errorf("target version %q is a draft", rel.GetTagName())
-	}
-
-	if targetVersion == "" && rel.GetPrerelease() {
-		return nil, semver.Version{}, fmt.Errorf("target version %q is a pre-release", rel.GetTagName())
-	}
-
-	verText := rel.GetTagName()
-	indices := reVersion.FindStringIndex(verText)
-	if indices == nil {
-		return nil, semver.Version{}, fmt.Errorf("version %q does not adopt semantic versioning", verText)
-	}
-	if indices[0] > 0 {
-		log.Println("Strip prefix of version", verText[:indices[0]], "from", verText)
-		verText = verText[indices[0]:]
-	}
-
-	// If semver cannot parse the version text, it means that the text is not adopting
-	// the semantic versioning. So it should be skipped.
-	ver, err := semver.Make(verText)
-	if err != nil {
-		return nil, semver.Version{}, fmt.Errorf("version %q does not adopt semantic versioning: %w", verText, err)
-	}
-
-	for _, asset := range rel.Assets {
-		name := asset.GetName()
-		if len(filters) > 0 {
-			// if some filters are defined, match them: if any one matches, the asset is selected
-			matched := false
-			for _, filter := range filters {
-				if filter.MatchString(name) {
-					log.Println("Selected filtered asset", name)
-					matched = true
-					break
-				}
-				log.Printf("Skipping asset %q not matching filter %v\n", name, filter)
-			}
-			if !matched {
-				continue
-			}
-		}
-
-		for _, s := range suffixes {
-			if strings.HasSuffix(name, s) { // require version, arch etc
-				// default: assume single artifact
-				return asset, ver, nil
-			}
-		}
-	}
-
-	return nil, semver.Version{}, fmt.Errorf(
-		"no suitable asset was found in release %q", rel.GetTagName())
-}
-
-func findValidationAsset(rel *github.RepositoryRelease, validationName string) (*github.ReleaseAsset, bool) {
-	for _, asset := range rel.Assets {
-		if asset.GetName() == validationName {
-			return asset, true
-		}
-	}
-	return nil, false
-}
-
-func findReleaseAndAsset(rels []*github.RepositoryRelease,
-	targetVersion string,
-	filters []*regexp.Regexp,
-) (*github.RepositoryRelease, *github.ReleaseAsset, semver.Version, error) {
+func findAssetFromRelease(
+	rel *github.RepositoryRelease, filters []*regexp.Regexp,
+) (*github.ReleaseAsset, error) {
 	// Generate candidates
 	suffixes := make([]string, 0, 2*7*2)
 	for _, sep := range []rune{'_', '-'} {
@@ -100,34 +28,43 @@ func findReleaseAndAsset(rels []*github.RepositoryRelease,
 		}
 	}
 
-	var ver semver.Version
-	var asset *github.ReleaseAsset
-	var release *github.RepositoryRelease
+	for _, asset := range rel.Assets {
+		name := asset.GetName()
+		if len(filters) > 0 {
+			// if some filters are defined, match them: if any one matches, the asset is selected
+			matched := false
+			for _, filter := range filters {
+				if filter.MatchString(name) {
+					matched = true
+					break
+				}
+			}
 
-	// Find the latest version from the list of releases.
-	// Returned list from GitHub API is in the order of the date when created.
-	//   ref: https://github.com/rhysd/go-github-selfupdate/issues/11
-	for _, rel := range rels {
-		a, v, err := findAssetFromRelease(rel, suffixes, targetVersion, filters)
-		if err != nil {
-			return nil, nil, ver, fmt.Errorf("could not find asset from release %q for %s %s: %w",
-				rel.GetTagName(), runtime.GOOS, runtime.GOARCH, err)
+			if !matched {
+				continue
+			}
 		}
 
-		// Note: any version with suffix is less than any version without suffix.
-		// e.g. 0.0.1 > 0.0.1-beta
-		if release == nil || v.GTE(ver) {
-			ver = v
-			asset = a
-			release = rel
+		for _, s := range suffixes {
+			if strings.HasSuffix(name, s) { // require version, arch etc
+				// default: assume single artifact
+				return asset, nil
+			}
 		}
 	}
 
-	if release == nil {
-		return nil, nil, semver.Version{}, fmt.Errorf("could not find any release for %s and %s", runtime.GOOS, runtime.GOARCH)
+	return nil, fmt.Errorf("could not find any asset from release %q for %s %s",
+		rel.GetTagName(), runtime.GOOS, runtime.GOARCH)
+}
+
+func findValidationAsset(rel *github.RepositoryRelease, validationName string) (*github.ReleaseAsset, bool) {
+	for _, asset := range rel.Assets {
+		if asset.GetName() == validationName {
+			return asset, true
+		}
 	}
 
-	return release, asset, ver, nil
+	return nil, false
 }
 
 // DetectLatest tries to get the latest version of the repository on GitHub. 'slug' means 'owner/name' formatted string.
@@ -144,7 +81,6 @@ func (up *Updater) DetectLatest(owner, name string) (*Release, error) {
 func (up *Updater) DetectVersion(owner, name, version string) (*Release, error) {
 	rels, res, err := up.api.Repositories.ListReleases(up.apiCtx, owner, name, nil)
 	if err != nil {
-		log.Println("API returned an error response:", err)
 		if res != nil && res.StatusCode == 404 {
 			return nil, fmt.Errorf("repository or release not found: %w", err)
 		}
@@ -152,18 +88,33 @@ func (up *Updater) DetectVersion(owner, name, version string) (*Release, error) 
 		return nil, fmt.Errorf("failed to fetch releases: %w", err)
 	}
 
-	rel, asset, ver, err := findReleaseAndAsset(rels, version, up.filters)
+	rel, err := findRelease(rels, version)
+	if err != nil {
+		return nil, err
+	}
+
+	if rel.GetDraft() {
+		return nil, fmt.Errorf("%q is a draft", rel.GetTagName())
+	}
+
+	if rel.GetPrerelease() {
+		return nil, fmt.Errorf("%q is a pre-release", rel.GetTagName())
+	}
+
+	asset, err := findAssetFromRelease(rel, up.filters)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find release and asset: %w", err)
 	}
 
-	url := asset.GetBrowserDownloadURL()
-	log.Println("Successfully fetched the latest release. tag:", rel.GetTagName(), ", name:", rel.GetName(), ", URL:", rel.GetURL(), ", Asset:", url)
+	ver, err := semver.ParseTolerant(rel.GetTagName())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse version: %w", err)
+	}
 
 	publishedAt := rel.GetPublishedAt().Time
 	release := &Release{
 		Version:           ver,
-		AssetURL:          url,
+		AssetURL:          asset.GetBrowserDownloadURL(),
 		AssetByteSize:     asset.GetSize(),
 		AssetID:           asset.GetID(),
 		ValidationAssetID: -1,
@@ -186,6 +137,57 @@ func (up *Updater) DetectVersion(owner, name, version string) (*Release, error) 
 	}
 
 	return release, nil
+}
+
+func findRelease(rels []*github.RepositoryRelease, version string) (*github.RepositoryRelease, error) {
+	if len(rels) == 0 {
+		return nil, fmt.Errorf("no releases found")
+	}
+
+	if version != "" {
+		// Find the release with the given version.
+		rel, ok := lo.Find(rels, func(rel *github.RepositoryRelease) bool {
+			return rel.GetTagName() == version
+		})
+		if !ok {
+			return nil, fmt.Errorf("release %q not found", version)
+		}
+
+		return rel, nil
+	}
+
+	// filter out drafts and pre-releases
+	rels = lo.Filter(rels, func(rel *github.RepositoryRelease, i int) bool {
+		return !rel.GetDraft() && !rel.GetPrerelease()
+	})
+
+	if len(rels) == 0 {
+		return nil, fmt.Errorf("no published releases found")
+	}
+
+	// sort by version
+	sort.SliceStable(rels, func(i, j int) bool {
+		tag1 := rels[i].GetTagName()
+		tag2 := rels[j].GetTagName()
+
+		// If the tag name is not a valid semver, use the published date.
+		ver1, err1 := semver.ParseTolerant(tag1)
+		ver2, err2 := semver.ParseTolerant(tag2)
+		switch {
+		case err1 == nil && err2 == nil:
+			return ver1.GTE(ver2)
+		case err1 == nil:
+			return true
+		case err2 == nil:
+			return false
+		default:
+			// If both are not valid semver, use the published date.
+			return rels[i].GetPublishedAt().Time.After(rels[j].GetPublishedAt().Time)
+		}
+	})
+
+	// take the first item
+	return rels[0], nil
 }
 
 // DetectLatest detects the latest release of the repository.
