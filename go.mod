@@ -3,7 +3,7 @@ module github.com/faetools/go-github-selfupdate
 go 1.20
 
 require (
-	github.com/Masterminds/semver v1.5.0
+	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/google/go-github/v50 v50.2.0
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/samber/lo v1.38.1

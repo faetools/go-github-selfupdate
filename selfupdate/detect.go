@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-github/v50/github"
 	"github.com/samber/lo"
 )

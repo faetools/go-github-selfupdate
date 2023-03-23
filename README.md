@@ -105,7 +105,7 @@ Following is the easiest way to use this package.
 ```go
 import (
     "log"
-    "github.com/Masterminds/semver"
+    "github.com/Masterminds/semver/v3"
     "github.com/rhysd/go-github-selfupdate/selfupdate"
 )
 
@@ -133,7 +133,7 @@ Following asks user to update or not.
 ```go
 import (
     "bufio"
-    "github.com/Masterminds/semver"
+    "github.com/Masterminds/semver/v3"
     "github.com/rhysd/go-github-selfupdate/selfupdate"
     "log"
     "os"
@@ -195,7 +195,7 @@ Following is an example of usage with GitHub Enterprise.
 ```go
 import (
     "log"
-    "github.com/Masterminds/semver"
+    "github.com/Masterminds/semver/v3"
     "github.com/rhysd/go-github-selfupdate/selfupdate"
 )
 
