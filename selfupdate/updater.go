@@ -7,7 +7,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/google/go-github/v30/github"
+	"github.com/google/go-github/v50/github"
 	gitconfig "github.com/tcnksm/go-gitconfig"
 	"golang.org/x/oauth2"
 )

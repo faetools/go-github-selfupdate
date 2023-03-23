@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
-	"github.com/google/go-github/v30/github"
+	"github.com/google/go-github/v50/github"
 )
 
 var reVersion = regexp.MustCompile(`\d+\.\d+\.\d+`)
