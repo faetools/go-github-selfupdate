@@ -46,23 +46,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	latest, found, err := selfupdate.DetectLatest(filepath.Split(repo))
+	latest, err := selfupdate.DetectLatest(filepath.Split(repo))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if !found {
-		fmt.Println("No release was found")
+
+	if *asset {
+		fmt.Println(latest.AssetURL)
+	} else if *url {
+		fmt.Println(latest.URL)
 	} else {
-		if *asset {
-			fmt.Println(latest.AssetURL)
-		} else if *url {
-			fmt.Println(latest.URL)
-		} else {
-			fmt.Println(latest.Version)
-			if *notes {
-				fmt.Printf("\nRelease Notes:\n%s\n", latest.ReleaseNotes)
-			}
+		fmt.Println(latest.Version)
+		if *notes {
+			fmt.Printf("\nRelease Notes:\n%s\n", latest.ReleaseNotes)
 		}
 	}
 }

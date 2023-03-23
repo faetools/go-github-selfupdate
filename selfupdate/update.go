@@ -124,14 +124,14 @@ func (up *Updater) UpdateCommand(cmdPath string, current semver.Version, owner, 
 		cmdPath = p
 	}
 
-	rel, ok, err := up.DetectLatest(owner, name)
+	rel, err := up.DetectLatest(owner, name)
 	if err != nil {
 		return nil, err
 	}
-	if !ok {
-		log.Println("No release detected. Current version is considered up-to-date")
-		return &Release{Version: current}, nil
-	}
+	// if !ok {
+	// 	log.Println("No release detected. Current version is considered up-to-date")
+	// 	return &Release{Version: current}, nil
+	// }
 	if current.Equals(rel.Version) {
 		log.Println("Current version", current, "is the latest. Update is not needed")
 		return rel, nil
