@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/blang/semver"
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"github.com/faetools/go-github-selfupdate/selfupdate"
 )
 
 const version = "1.2.3"

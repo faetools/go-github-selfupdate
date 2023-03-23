@@ -38,9 +38,6 @@ github.com/cloudflare/circl/sign/ed448
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
-# github.com/google/go-github/v30 v30.1.0
-## explicit; go 1.13
-github.com/google/go-github/v30/github
 # github.com/google/go-github/v50 v50.2.0
 ## explicit; go 1.17
 github.com/google/go-github/v50/github
@@ -52,9 +49,8 @@ github.com/google/go-querystring/query
 github.com/inconshreveable/go-update
 github.com/inconshreveable/go-update/internal/binarydist
 github.com/inconshreveable/go-update/internal/osext
-# github.com/rhysd/go-github-selfupdate v1.2.3
-## explicit; go 1.13
-github.com/rhysd/go-github-selfupdate/selfupdate
+# github.com/onsi/gomega v1.4.2
+## explicit
 # github.com/tcnksm/go-gitconfig v0.1.2
 ## explicit
 github.com/tcnksm/go-gitconfig
@@ -68,12 +64,6 @@ github.com/ulikunitz/xz/lzma
 ## explicit; go 1.17
 golang.org/x/crypto/cast5
 golang.org/x/crypto/hkdf
-golang.org/x/crypto/openpgp
-golang.org/x/crypto/openpgp/armor
-golang.org/x/crypto/openpgp/elgamal
-golang.org/x/crypto/openpgp/errors
-golang.org/x/crypto/openpgp/packet
-golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/sha3
 # golang.org/x/net v0.8.0
 ## explicit; go 1.17

@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"github.com/faetools/go-github-selfupdate/selfupdate"
 )
 
 func usage() {

@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"github.com/faetools/go-github-selfupdate/selfupdate"
 )
 
 var version = "1.0.0"
