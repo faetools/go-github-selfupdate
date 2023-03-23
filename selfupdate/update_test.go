@@ -43,7 +43,6 @@ func TestUpdateCommand(t *testing.T) {
 		"test-release-xz",
 		"test-release-contain-version",
 	} {
-
 		t.Run(name, func(t *testing.T) {
 			setupTestBinary()
 			defer teardownTestBinary()
