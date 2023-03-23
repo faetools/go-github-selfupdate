@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 )
 
 func setupTestBinary() {
@@ -52,7 +52,7 @@ func TestUpdateCommand(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if rel.Version.NE(latest) {
+			if !rel.Version.Equal(latest) {
 				t.Error("Version is not latest", rel.Version)
 			}
 			bytes, err := exec.Command(filepath.FromSlash("./github-release-test")).Output()
@@ -94,7 +94,7 @@ func TestUpdateViaSymlink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rel.Version.NE(latest) {
+	if !rel.Version.Equal(latest) {
 		t.Error("Version is not latest", rel.Version)
 	}
 
@@ -174,7 +174,7 @@ func TestNoReleaseFoundForUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal("No release should not make an error:", err)
 	}
-	if rel.Version.NE(v) {
+	if !rel.Version.Equal(v) {
 		t.Error("No release should return the current version as the latest:", rel.Version)
 	}
 	if rel.URL != "" {
@@ -200,7 +200,7 @@ func TestCurrentIsTheLatest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rel.Version.NE(v) {
+	if !rel.Version.Equal(v) {
 		t.Error("v1.2.3 should be the latest:", rel.Version)
 	}
 	if rel.URL == "" {
@@ -309,7 +309,7 @@ func TestUpdateFromGitHubEnterprise(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rel.Version.NE(latest) {
+	if !rel.Version.Equal(latest) {
 		t.Error("Version is not latest", rel.Version)
 	}
 
@@ -345,7 +345,7 @@ func TestUpdateFromGitHubPrivateRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rel.Version.NE(latest) {
+	if !rel.Version.Equal(latest) {
 		t.Error("Version is not latest", rel.Version)
 	}
 

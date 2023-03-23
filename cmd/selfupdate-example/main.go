@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 	"github.com/faetools/go-github-selfupdate/selfupdate"
 )
 
@@ -21,7 +21,7 @@ func selfUpdate(owner, name string) error {
 		return err
 	}
 
-	if previous.Equals(latest.Version) {
+	if previous.Equal(latest.Version) {
 		fmt.Println("Current binary is the latest version", version)
 	} else {
 		fmt.Println("Update successfully done to version", latest.Version)

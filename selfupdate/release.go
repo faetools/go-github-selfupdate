@@ -3,13 +3,13 @@ package selfupdate
 import (
 	"time"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 )
 
 // Release represents a release asset for current OS and arch.
 type Release struct {
 	// Version is the version of the release
-	Version semver.Version
+	Version *semver.Version
 	// AssetURL is a URL to the uploaded file for the release
 	AssetURL string
 	// AssetSize represents the size of asset in bytes

@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 	"github.com/google/go-github/v50/github"
 	"github.com/samber/lo"
 )
@@ -106,7 +106,7 @@ func (up *Updater) DetectVersion(owner, name, version string) (*Release, error) 
 		return nil, fmt.Errorf("failed to find release and asset: %w", err)
 	}
 
-	ver, err := semver.ParseTolerant(rel.GetTagName())
+	ver, err := semver.NewVersion(rel.GetTagName())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
 	}
@@ -171,11 +171,11 @@ func findRelease(rels []*github.RepositoryRelease, version string) (*github.Repo
 		tag2 := rels[j].GetTagName()
 
 		// If the tag name is not a valid semver, use the published date.
-		ver1, err1 := semver.ParseTolerant(tag1)
-		ver2, err2 := semver.ParseTolerant(tag2)
+		ver1, err1 := semver.NewVersion(tag1)
+		ver2, err2 := semver.NewVersion(tag2)
 		switch {
 		case err1 == nil && err2 == nil:
-			return ver1.GTE(ver2)
+			return ver1.GreaterThan(ver2)
 		case err1 == nil:
 			return true
 		case err2 == nil:
